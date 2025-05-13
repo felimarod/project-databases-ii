@@ -25,10 +25,10 @@ Access the full source code, architecture diagrams, and additional documentation
 [Workshop 1](./Workshop-1/AI_Powered_Predictive_Trading_Analytics_Platform.pdf)
 
 # 📧 Contact
-For questions, suggestions, or contributions, feel free to open an issue or contact the maintainer directly via email.
+For questions or suggestions, feel free to open an issue or contact the maintainers directly via email.
 
 afmartinr@udistrital.edu.co
-a@udistrital.edu.co
+dacolorador@udistrital.edu.co
 
 [1]: https://github.com/DaCr1234
 [2]: https://github.com/felimarod
