@@ -18,9 +18,6 @@ This project presents a comprehensive AI-driven trading platform designed to ass
 - 🗃️ Database Schema
 - 🧮 Entity Relationships
 
-# 📌 Repository
-Access the full source code, architecture diagrams, and additional documentation at:
-
 # 🔗 Documents
 [Workshop 1](./Workshop-1/AI_Powered_Predictive_Trading_Analytics_Platform.pdf)
 
