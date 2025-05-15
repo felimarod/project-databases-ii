@@ -1,0 +1,79 @@
+---
+config:
+  theme: base
+  themeVariables:
+    primaryColor: '#fff5ee'
+    background: '#ffffff'    
+---
+flowchart LR
+ subgraph Infrastructure["Infrastructure Layer (Adapters)"]
+    direction TB
+        PostgreSQL@{ label: "<div style=\"min-width:140px; padding:6px;\"><i class=\"fa fa-database\"></i><br><b>PostgreSQL</b><br><small>Transactional</small></div>" }
+        MongoDB@{ label: "<div style=\"min-width:140px; padding:6px;\"><i class=\"fab fa-envira\"></i><br><b>MongoDB</b><br><small>Time Series</small></div>" }
+        Snowflake@{ label: "<div style=\"min-width:140px; padding:6px;\"><i class=\"fas fa-snowflake\"></i><br><b>Snowflake</b><br><small>Analytics</small></div>" }
+        Kafka@{ label: "<div style=\"min-width:140px; padding:6px;\"><i class=\"fas fa-exchange-alt\"></i><br><b>Kafka</b><br><small>Event Bus</small></div>" }
+  end
+ subgraph Domain["Business Domain (Core)"]
+    direction TB
+        BC1@{ label: "<i class=\"fas fa-chess-queen\"></i><br>Bounded Context 1" }
+        BC2@{ label: "<i class=\"fas fa-chess-knight\"></i><br>Bounded Context 2" }
+        BC3@{ label: "<i class=\"fas fa-chess-rook\"></i><br>Bounded Context 3" }
+  end
+ subgraph Interfaces["Interface Layer (Ports)"]
+    direction TB
+        MarketDataPort@{ label: "<i class=\"fas fa-chart-line\"></i><br>Market Data<br>Repository" }
+        OrderExecutionPort@{ label: "<i class=\"fas fa-handshake\"></i><br>Order Execution<br>Port" }
+        AuditingPort@{ label: "<i class=\"fas fa-clipboard-check\"></i><br>Auditing Port" }
+        AnalyticsPort@{ label: "<i class=\"fas fa-chart-pie\"></i><br>Analytics Port" }
+  end
+ subgraph Connectors[" "]
+    direction TB
+        MDK@{ label: "<small style=\"font-size:10px; color:#7d3c98\">Market Data Stream</small>" }
+        OEK@{ label: "<small style=\"font-size:10px; color:#7d3c98\">Order Execution Commands</small>" }
+        AUDK@{ label: "<small style=\"font-size:10px; color:#7d3c98\">Audit Logs</small>" }
+        ANAK@{ label: "<small style=\"font-size:10px; color:#7d3c98\">Analytics Queries</small>" }
+  end
+    BC1 --> MarketDataPort & AuditingPort
+    BC2 --> OrderExecutionPort & AuditingPort
+    BC3 --> AnalyticsPort
+    MarketDataPort --> MDK
+    OrderExecutionPort --> OEK
+    AuditingPort --> AUDK
+    AnalyticsPort --> ANAK
+    MDK --> MongoDB & Kafka
+    OEK --> PostgreSQL & Kafka
+    AUDK --> PostgreSQL
+    ANAK --> Snowflake
+    PostgreSQL@{ shape: stadium}
+    MongoDB@{ shape: stadium}
+    Snowflake@{ shape: stadium}
+    Kafka@{ shape: stadium}
+    BC1@{ shape: hexagon}
+    BC2@{ shape: hexagon}
+    BC3@{ shape: hexagon}
+    MarketDataPort@{ shape: subroutine}
+    OrderExecutionPort@{ shape: subroutine}
+    AuditingPort@{ shape: subroutine}
+    AnalyticsPort@{ shape: subroutine}
+    MDK@{ shape: stadium}
+    OEK@{ shape: stadium}
+    AUDK@{ shape: stadium}
+    ANAK@{ shape: stadium}
+     PostgreSQL:::postgres
+     MongoDB:::mongo
+     Snowflake:::snowflake
+     Kafka:::kafka
+     BC1:::domain
+     BC2:::domain
+     BC3:::domain
+     MarketDataPort:::port
+     OrderExecutionPort:::port
+     AuditingPort:::port
+     AnalyticsPort:::port
+    classDef domain fill:#2e4053,stroke:#fff,color:white,shape:hexagon,font-size:14px,line-height:1.2
+    classDef port fill:#5dade2,stroke:#1b4f72,color:#1b4f72,shape:rect,font-size:13px,line-height:1.2
+    classDef postgres fill:#336791,stroke:#fff,color:white,font-size:13px,line-height:1.2
+    classDef mongo fill:#589636,stroke:#fff,color:white,font-size:13px,line-height:1.2
+    classDef snowflake fill:#29b5e8,stroke:#fff,color:white,font-size:13px,line-height:1.2
+    classDef kafka fill:#000,stroke:#fff,color:white,font-size:13px,line-height:1.2
+    classDef Connectors fill:#fff,stroke:none,color:#7d3c98,font-size:10px
