@@ -20,9 +20,13 @@ This project presents a comprehensive AI-driven trading platform designed to ass
 
 # 🔗 Documents
 [Workshop 1](./Workshop-1/AI_Powered_Predictive_Trading_Analytics_Platform.pdf)
+
 [Catch-Up/Paper](./Catch-Up/Paper.pdf)
+
 [Catch-Up/Poster](./Catch-Up/Poster.pdf)
+
 [Catch-Up/Technical Report](./Catch-Up/Report.pdf)
+
 [Catch-Up/Presentation](./Catch-Up/presentation.pdf)
 
 
