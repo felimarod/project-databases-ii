@@ -29,9 +29,9 @@ This project presents a comprehensive AI-driven trading platform designed to ass
 
 [Catch-Up/Presentation](./Catch-Up/presentation.pdf)
 
-[Workshop 2](./WS2ProjecctBD.pdf)
+[Workshop 2](./Workshop-2/WS2ProjecctBD.pdf)
 
-[Workshop 3](./WS3ProjectBD.pdf)
+[Workshop 3](./Workshop-3/WS3ProjectBD.pdf)
 
 
 # 📧 Contact
