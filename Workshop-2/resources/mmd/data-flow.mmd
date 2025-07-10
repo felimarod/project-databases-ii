@@ -1,0 +1,162 @@
+%% Complete Data Flow Architecture: User Request to BI Dashboard
+graph TB
+    subgraph "Client Interaction Layer"
+        USER[Trading User]
+        WEB_CLIENT[Web Dashboard]
+        MOBILE_CLIENT[Mobile App]
+        DESKTOP_CLIENT[Desktop Trading Terminal]
+    end
+    
+    subgraph "API Gateway & Authentication"
+        LOAD_BALANCER[Load Balancer - NGINX/HAProxy]
+        API_GATEWAY[API Gateway - Spring Boot Gateway]
+        AUTH_SERVICE[Authentication Service - OAuth 2.0 + JWT]
+        RATE_LIMITER[Rate Limiter - Redis-based]
+    end
+    
+    subgraph "Business Logic Layer"
+        USER_SERVICE[User Service - Account Management]
+        TRADE_SERVICE[Trading Service - Order Management]
+        PORTFOLIO_SERVICE[Portfolio Service - Performance Tracking]
+        MARKET_SERVICE[Market Data Service - Real-time Processing]
+        SUPPORT_SERVICE[Support Service - Ticket Management]
+        NOTIFICATION_SERVICE[Notification Service - Alerts & Messages]
+    end
+    
+    subgraph "Data Persistence Layer"
+        subgraph "PostgreSQL Cluster"
+            PG_PRIMARY[PostgreSQL Primary - Transactional Data]
+            PG_STANDBY[PostgreSQL Standby - Read Replicas]
+            PG_PARTITIONS[Partitioned Tables - Time-based Partitioning]
+        end
+        
+        subgraph "MongoDB Cluster"
+            MONGO_PRIMARY[MongoDB Primary - Time-Series Data]
+            MONGO_SECONDARY1[MongoDB Secondary 1]
+            MONGO_SECONDARY2[MongoDB Secondary 2]
+            MONGO_SHARDS[Sharded Collections - Horizontal Scaling]
+        end
+        
+        subgraph "Data Warehouse"
+            SNOWFLAKE[Snowflake - Analytics & Reporting]
+            MATERIALIZED_VIEWS[Materialized Views - Pre-computed Analytics]
+        end
+    end
+    
+    subgraph "Event Streaming & Processing"
+        KAFKA_CLUSTER[Apache Kafka Cluster - Event Streaming Platform]
+        KAFKA_STREAMS[Kafka Streams - Real-time Processing]
+        CDC_DEBEZIUM[Debezium CDC - Change Data Capture]
+        SCHEMA_REGISTRY[Schema Registry - Data Governance]
+    end
+    
+    subgraph "ETL & Data Pipeline"
+        AIRFLOW[Apache Airflow - Workflow Orchestration]
+        DBT[dbt - Data Transformation]
+        PYTHON_JOBS[Python ETL Jobs - Data Processing]
+        DATA_QUALITY[Data Quality Checks - Validation & Monitoring]
+    end
+    
+    subgraph "External Data Sources"
+        YAHOO_FINANCE[Yahoo Finance API - Market Data]
+        ALPHA_VANTAGE[Alpha Vantage API - Technical Indicators]
+        BROKER_MT5[MetaTrader 5 - Trade Execution]
+        BINANCE_API[Binance API - Crypto Data]
+        NEWS_FEEDS[Financial News APIs - Market Sentiment]
+    end
+    
+    subgraph "Business Intelligence & Analytics"
+        DATASTUDIO[Google Data Studio - Executive Dashboards]
+        LOOKER[Looker Studio - Performance Analytics]
+        TABLEAU[Tableau - Advanced Visualizations]
+        CUSTOM_REPORTS[Custom Reports - Regulatory Compliance]
+    end
+    
+    subgraph "Monitoring & Observability"
+        GRAFANA[Grafana - System Monitoring]
+        PROMETHEUS[Prometheus - Metrics Collection]
+        ELASTIC_STACK[ELK Stack - Log Management]
+        ALERT_MANAGER[Alert Manager - Incident Response]
+    end
+
+    %% User Journey Flow
+    USER --> WEB_CLIENT
+    USER --> MOBILE_CLIENT
+    USER --> DESKTOP_CLIENT
+    
+    %% Client to Gateway
+    WEB_CLIENT --> LOAD_BALANCER
+    MOBILE_CLIENT --> LOAD_BALANCER
+    DESKTOP_CLIENT --> LOAD_BALANCER
+    
+    %% Gateway Processing
+    LOAD_BALANCER --> API_GATEWAY
+    API_GATEWAY --> AUTH_SERVICE
+    API_GATEWAY --> RATE_LIMITER
+    
+    %% Business Logic Routing
+    API_GATEWAY --> USER_SERVICE
+    API_GATEWAY --> TRADE_SERVICE
+    API_GATEWAY --> PORTFOLIO_SERVICE
+    API_GATEWAY --> MARKET_SERVICE
+    API_GATEWAY --> SUPPORT_SERVICE
+    
+    %% Database Connections
+    USER_SERVICE --> PG_PRIMARY
+    TRADE_SERVICE --> PG_PRIMARY
+    PORTFOLIO_SERVICE --> PG_PRIMARY
+    PG_PRIMARY --> PG_STANDBY
+    PG_PRIMARY --> PG_PARTITIONS
+    
+    MARKET_SERVICE --> MONGO_PRIMARY
+    SUPPORT_SERVICE --> MONGO_PRIMARY
+    MONGO_PRIMARY --> MONGO_SECONDARY1
+    MONGO_PRIMARY --> MONGO_SECONDARY2
+    MONGO_PRIMARY --> MONGO_SHARDS
+    
+    PORTFOLIO_SERVICE --> SNOWFLAKE
+    SNOWFLAKE --> MATERIALIZED_VIEWS
+    
+    %% Event Streaming
+    PG_PRIMARY -.->|CDC Events| CDC_DEBEZIUM
+    MONGO_PRIMARY -.->|Change Streams| KAFKA_CLUSTER
+    CDC_DEBEZIUM --> KAFKA_CLUSTER
+    KAFKA_CLUSTER --> KAFKA_STREAMS
+    KAFKA_CLUSTER --> SCHEMA_REGISTRY
+    
+    %% External Data Integration
+    MARKET_SERVICE --> YAHOO_FINANCE
+    MARKET_SERVICE --> ALPHA_VANTAGE
+    TRADE_SERVICE --> BROKER_MT5
+    MARKET_SERVICE --> BINANCE_API
+    MARKET_SERVICE --> NEWS_FEEDS
+    
+    %% ETL Pipeline
+    KAFKA_CLUSTER --> AIRFLOW
+    AIRFLOW --> PYTHON_JOBS
+    PYTHON_JOBS --> DBT
+    DBT --> SNOWFLAKE
+    AIRFLOW --> DATA_QUALITY
+    
+    %% Business Intelligence
+    MATERIALIZED_VIEWS --> DATASTUDIO
+    SNOWFLAKE --> LOOKER
+    SNOWFLAKE --> TABLEAU
+    SNOWFLAKE --> CUSTOM_REPORTS
+    
+    %% Real-time Notifications
+    KAFKA_STREAMS --> NOTIFICATION_SERVICE
+    NOTIFICATION_SERVICE -.->|WebSocket| WEB_CLIENT
+    NOTIFICATION_SERVICE -.->|Push Notifications| MOBILE_CLIENT
+    
+    %% Monitoring
+    PG_PRIMARY -.-> PROMETHEUS
+    MONGO_PRIMARY -.-> PROMETHEUS
+    KAFKA_CLUSTER -.-> PROMETHEUS
+    PROMETHEUS --> GRAFANA
+    PROMETHEUS --> ALERT_MANAGER
+    
+    %% Logging
+    API_GATEWAY -.-> ELASTIC_STACK
+    TRADE_SERVICE -.-> ELASTIC_STACK
+    MARKET_SERVICE -.-> ELASTIC_STACK

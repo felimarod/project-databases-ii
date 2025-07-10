@@ -1,0 +1,204 @@
+%% Entity-Relationship Model for Trading Platform Database Design
+erDiagram
+    USER {
+        uuid user_id PK
+        varchar email
+        varchar username
+        varchar password_hash
+        timestamp created_at
+        timestamp last_login
+        enum status
+        enum subscription_tier
+    }
+    
+    ACCOUNT {
+        uuid account_id PK
+        uuid user_id FK
+        varchar account_number
+        enum account_type
+        char currency_code
+        decimal balance
+        decimal available_balance
+        timestamp created_at
+        enum status
+    }
+    
+    PROFILE {
+        uuid profile_id PK
+        uuid user_id FK
+        varchar first_name
+        varchar last_name
+        varchar phone
+        varchar country
+        enum kyc_status
+        date birth_date
+    }
+    
+    STRATEGY {
+        uuid strategy_id PK
+        uuid user_id FK
+        varchar strategy_name
+        enum strategy_type
+        jsonb algorithm_config
+        jsonb parameters
+        timestamp created_at
+        timestamp updated_at
+        integer version
+        enum status
+        uuid parent_strategy_id FK
+    }
+    
+    BACKTEST {
+        uuid backtest_id PK
+        uuid strategy_id FK
+        date start_date
+        date end_date
+        decimal initial_capital
+        decimal final_capital
+        decimal total_return
+        decimal sharpe_ratio
+        decimal max_drawdown
+        integer total_trades
+        decimal win_rate
+    }
+    
+    STRATEGY_PARAM {
+        uuid param_id PK
+        uuid strategy_id FK
+        varchar param_name
+        varchar param_type
+        jsonb param_value
+        text description
+        boolean is_active
+    }
+    
+    TRADE {
+        uuid trade_id PK
+        uuid user_id FK
+        uuid account_id FK
+        uuid strategy_id FK
+        varchar instrument_symbol
+        enum trade_type
+        enum side
+        decimal quantity
+        decimal entry_price
+        decimal exit_price
+        decimal stop_loss
+        decimal take_profit
+        decimal commission
+        decimal swap
+        decimal pnl
+        timestamp execution_date
+        timestamp close_date
+        enum status
+        varchar broker_trade_id
+    }
+    
+    TRADE_EXECUTION {
+        uuid execution_id PK
+        uuid trade_id FK
+        enum execution_type
+        decimal execution_price
+        decimal executed_quantity
+        timestamp execution_timestamp
+        decimal execution_fee
+        decimal slippage
+        varchar execution_venue
+    }
+    
+    ORDER_BOOK {
+        uuid order_id PK
+        uuid trade_id FK
+        enum order_type
+        enum side
+        decimal price
+        decimal quantity
+        timestamp created_at
+        enum status
+        timestamp filled_at
+    }
+    
+    PORTFOLIO {
+        uuid portfolio_id PK
+        uuid user_id FK
+        varchar portfolio_name
+        decimal total_value
+        decimal cash_balance
+        timestamp created_at
+        timestamp last_updated
+        enum status
+    }
+    
+    PORTFOLIO_ALLOCATION {
+        uuid allocation_id PK
+        uuid portfolio_id FK
+        uuid strategy_id FK
+        varchar instrument_symbol
+        decimal allocation_percentage
+        decimal current_value
+        decimal quantity
+        timestamp last_rebalance
+    }
+    
+    PERFORMANCE {
+        uuid performance_id PK
+        uuid portfolio_id FK
+        date calculation_date
+        decimal total_value
+        decimal daily_pnl
+        decimal cumulative_pnl
+        decimal daily_return
+        decimal cumulative_return
+        decimal max_drawdown
+        decimal sharpe_ratio
+        decimal var_95
+        decimal var_99
+    }
+    
+    RISK_PROFILE {
+        uuid risk_profile_id PK
+        uuid user_id FK
+        enum risk_tolerance
+        decimal max_loss_per_trade
+        decimal max_daily_loss
+        decimal max_leverage
+        decimal position_size_limit
+        timestamp created_at
+        timestamp updated_at
+    }
+    
+    RISK_METRICS {
+        uuid risk_metric_id PK
+        uuid portfolio_id FK
+        date calculation_date
+        decimal portfolio_var
+        decimal expected_shortfall
+        decimal beta
+        jsonb correlation_matrix
+        decimal concentration_risk
+        decimal liquidity_risk
+    }
+
+    %% Relationships
+    USER ||--|| ACCOUNT : "has primary"
+    USER ||--|| PROFILE : "has profile"
+    USER ||--o{ STRATEGY : "creates"
+    USER ||--o{ TRADE : "executes"
+    USER ||--o{ PORTFOLIO : "manages"
+    USER ||--|| RISK_PROFILE : "has risk profile"
+    
+    STRATEGY ||--o{ TRADE : "generates"
+    STRATEGY ||--o{ BACKTEST : "tested by"
+    STRATEGY ||--o{ STRATEGY_PARAM : "configured by"
+    %%STRATEGY ||--o{ STRATEGY : "inherits from"
+    
+    TRADE ||--o{ TRADE_EXECUTION : "executed as"
+    TRADE ||--o{ ORDER_BOOK : "placed as"
+    
+    PORTFOLIO ||--o{ PORTFOLIO_ALLOCATION : "allocated to"
+    PORTFOLIO ||--o{ PERFORMANCE : "measured by"
+    PORTFOLIO ||--o{ RISK_METRICS : "analyzed by"
+    
+    STRATEGY ||--o{ PORTFOLIO_ALLOCATION : "allocated in"
+    
+    ACCOUNT ||--o{ TRADE : "processes"

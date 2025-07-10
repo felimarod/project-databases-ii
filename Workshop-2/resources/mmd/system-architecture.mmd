@@ -1,0 +1,137 @@
+%% Trading Platform System Architecture - Hexagonal & Microservices
+graph TB
+    subgraph "Client Applications"
+        WEB[Web Trading Dashboard - React/TypeScript]
+        MOBILE[Mobile Trading App - React Native]
+        TRADER[Professional Trader Workstation - Desktop Application]
+    end
+
+    subgraph "API Gateway & Load Balancing"
+        LB[Load Balancer - NGINX/HAProxy]
+        GATEWAY[API Gateway - Spring Boot Gateway]
+        WSS[WebSocket Gateway - Real-time Market Data]
+    end
+
+    subgraph "Microservices Architecture - Hexagonal Design"
+        subgraph "User & Account Management"
+            UA_DOMAIN[User Domain Logic]
+            UA_PORT_IN[Primary Ports - REST Controllers]
+            UA_PORT_OUT[Secondary Ports - Repository Interfaces]
+            UA_ADAPTER[Database Adapters - PostgreSQL]
+        end
+        
+        subgraph "Trading & Execution"
+            FT_DOMAIN[Trading Domain Logic]
+            FT_PORT_IN[Primary Ports - Trade Controllers]
+            FT_PORT_OUT[Secondary Ports - Broker Interfaces]
+            FT_ADAPTER[External Adapters - MT5, Binance]
+        end
+        
+        subgraph "Portfolio & Risk Management"
+            MM_DOMAIN[Portfolio Domain Logic]
+            MM_PORT_IN[Primary Ports - Risk Controllers]
+            MM_PORT_OUT[Secondary Ports - Analytics Interfaces]
+            MM_ADAPTER[Analytics Adapters - Risk Calculators]
+        end
+        
+        subgraph "Market Data Processing"
+            MD_DOMAIN[Market Data Domain]
+            MD_PORT_IN[Primary Ports - Stream Controllers]
+            MD_PORT_OUT[Secondary Ports - Data Provider Interfaces]
+            MD_ADAPTER[Provider Adapters - Yahoo, Alpha Vantage]
+        end
+        
+        subgraph "Support & Communication"
+            SC_DOMAIN[Support Domain Logic]
+            SC_PORT_IN[Primary Ports - Ticket Controllers]
+            SC_PORT_OUT[Secondary Ports - Notification Interfaces]
+            SC_ADAPTER[Communication Adapters - Email, SMS]
+        end
+    end
+
+    subgraph "Data Storage Layer"
+        subgraph "Transactional Database"
+            PG_PRIMARY[PostgreSQL Primary - Users, Accounts, Trades]
+            PG_STANDBY[PostgreSQL Standby - Read Replicas]
+        end
+        
+        subgraph "Time-Series Database"
+            MONGO_PRIMARY[MongoDB Primary - Market Data, Support Tickets]
+            MONGO_SECONDARY[MongoDB Secondary - Read Replicas]
+        end
+        
+        subgraph "Analytics Warehouse"
+            SNOWFLAKE[Snowflake - Historical Analytics]
+        end
+    end
+
+    subgraph "Event Streaming & ETL"
+        KAFKA_CLUSTER[Apache Kafka Cluster - Event Streaming & CDC]
+        KAFKA_STREAMS[Kafka Streams - Real-time Processing]
+        ETL_PIPELINE[ETL Pipeline - Python/Pandas + dbt]
+    end
+
+    subgraph "External Integrations"
+        YAHOO[Yahoo Finance API - Market Data]
+        ALPHA[Alpha Vantage API - Technical Indicators]
+        MT5[MetaTrader 5 - Trade Execution]
+        BINANCE[Binance API - Crypto Trading]
+    end
+
+    subgraph "Business Intelligence"
+        MATERIALIZED[Materialized Views - Pre-computed Analytics]
+        DATASTUDIO[Google Data Studio - Trading Dashboards]
+        LOOKER[Looker Studio - Performance Reports]
+    end
+
+    %% Client Connections
+    WEB --> LB
+    MOBILE --> LB
+    TRADER --> LB
+    LB --> GATEWAY
+    LB --> WSS
+
+    %% Gateway to Microservices
+    GATEWAY --> UA_PORT_IN
+    GATEWAY --> FT_PORT_IN
+    GATEWAY --> MM_PORT_IN
+    GATEWAY --> SC_PORT_IN
+    WSS --> MD_PORT_IN
+
+    %% Hexagonal Architecture Internal Connections
+    UA_PORT_IN --> UA_DOMAIN --> UA_PORT_OUT --> UA_ADAPTER
+    FT_PORT_IN --> FT_DOMAIN --> FT_PORT_OUT --> FT_ADAPTER
+    MM_PORT_IN --> MM_DOMAIN --> MM_PORT_OUT --> MM_ADAPTER
+    MD_PORT_IN --> MD_DOMAIN --> MD_PORT_OUT --> MD_ADAPTER
+    SC_PORT_IN --> SC_DOMAIN --> SC_PORT_OUT --> SC_ADAPTER
+
+    %% Database Connections
+    UA_ADAPTER --> PG_PRIMARY
+    FT_ADAPTER --> PG_PRIMARY
+    MM_ADAPTER --> PG_PRIMARY
+    PG_PRIMARY --> PG_STANDBY
+    
+    SC_ADAPTER --> MONGO_PRIMARY
+    MD_ADAPTER --> MONGO_PRIMARY
+    MONGO_PRIMARY --> MONGO_SECONDARY
+    
+    MM_ADAPTER --> SNOWFLAKE
+
+    %% External Integrations
+    MD_ADAPTER --> YAHOO
+    MD_ADAPTER --> ALPHA
+    FT_ADAPTER --> MT5
+    FT_ADAPTER --> BINANCE
+
+    %% Event Streaming
+    PG_PRIMARY -.->|CDC Events| KAFKA_CLUSTER
+    MONGO_PRIMARY -.->|Change Streams| KAFKA_CLUSTER
+    KAFKA_CLUSTER --> KAFKA_STREAMS
+    KAFKA_STREAMS --> ETL_PIPELINE
+    ETL_PIPELINE --> SNOWFLAKE
+
+    %% BI Layer
+    SNOWFLAKE --> MATERIALIZED
+    MATERIALIZED --> DATASTUDIO
+    MATERIALIZED --> LOOKER
+    KAFKA_CLUSTER -.->|Real-time Alerts| WSS
