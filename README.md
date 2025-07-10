@@ -33,6 +33,18 @@ This project presents a comprehensive AI-driven trading platform designed to ass
 
 [Workshop 3](./Workshop-3/WS3ProjectBD.pdf)
 
+Final project files:
+
+[Paper](./final-project/Paper.pdf)
+
+[Poster](./final-project/Poster.pdf)
+
+[Slides](./final-project/Presentation.pdf)
+
+[Technical Report](./final-project/Report_Tecnical.pdf)
+
+
+
 
 # 📧 Contact
 For questions or suggestions, feel free to open an issue or contact the maintainers directly via email.
