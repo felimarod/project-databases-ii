@@ -1,6 +1,7 @@
 import dotenv from 'dotenv';
 import { Price } from './core/entities';
 import Database from './core/services/db';
+import Api from './api';
 
 // Cargar variables de entorno
 dotenv.config();
@@ -18,7 +19,7 @@ async function main() {
     const collections = await db.listCollections().toArray();
     console.log("Colecciones disponibles:", collections.map(c => c.name).join(", "));
     
-    // Ejemplo: Inicializar colecciones basadas en los modelos
+    // // Ejemplo: Inicializar colecciones basadas en los modelos
     console.log("Inicializando colecciones basadas en los modelos definidos...");
     
     // 1. Market Data Time Series Collections
@@ -58,28 +59,33 @@ async function main() {
     console.log("Colecciones inicializadas correctamente");
     
     // Ejemplo: Insertar un documento de prueba
-    const testDoc: Price = {
-        open: 1,
-        close: 2,
-        high: 3,
-        low: 4,
-        ask: 5,
-        bid: 6,
-    };
+    // const testDoc: Price = {
+    //     open: 1,
+    //     close: 2,
+    //     high: 3,
+    //     low: 4,
+    //     ask: 5,
+    //     bid: 6,
+    // };
     
     // console.log("Estructura de la colección 'prices':", testDoc);
     // const result = await pricesCollection.insertOne(testDoc);
     // console.log(`Documento insertado: ${JSON.stringify(result)}`);
 
-    await pricesCollection.find({}).toArray().then(docs => {
-      console.log("Documentos en la colección 'prices':", docs);
-    });
+    // await pricesCollection.find({}).toArray().then(docs => {
+    //   console.log("Documentos en la colección 'prices':", docs);
+    // });
     
     // Cerrar la conexión cuando termine
     process.on('SIGINT', async () => {
       await database.disconnect();
       process.exit(0);
     });
+    
+    
+    // Iniciar la API
+    const api = new Api(3000);
+    api.start();
     
     console.log("Aplicación ejecutándose. Presiona Ctrl+C para salir.");
     

@@ -3,7 +3,7 @@ import { Prediction } from "./predictions.model";
 import { TechnicalSignal } from "./technical-signals.model";
 import { VolatilityAnalysis } from "./volatility-analysis.model";
 
-export interface MartketAnalysis {
+export interface MarketAnalysis {
   _id: string; // Unique identifier for the market analysis
   instrument: string; // Financial instrument (e.g., stock, forex)
   analysis_date: Date; // Date of the market analysis
