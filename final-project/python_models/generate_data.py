@@ -378,22 +378,22 @@ def create_strategies(db, num_strategies=NUM_RECORDS):
             type=random.choice(strategy_types),
             created_at=random_date(start_date, start_date + timedelta(days=30)),
             is_active=True,
-            default_parameters={
+            default_parameters=decimal_to_json_serializable({
                 "rsi_period": random.randint(7, 21),
                 "ma_fast": random.randint(5, 20),
                 "ma_slow": random.randint(21, 50),
                 "stop_loss_pct": random_decimal(0.5, 5.0, 2),
                 "take_profit_pct": random_decimal(1.0, 10.0, 2),
                 "risk_per_trade_pct": random_decimal(0.5, 2.0, 2)
-            },
+            }),
             version="1.0.0",
             creator=fake.name(),
-            performance_summary={
+            performance_summary=decimal_to_json_serializable({
                 "win_rate": random_decimal(40.0, 70.0, 2),
                 "profit_factor": random_decimal(1.0, 3.0, 2),
                 "sharpe_ratio": random_decimal(0.5, 2.5, 2),
                 "max_drawdown": random_decimal(5.0, 30.0, 2)
-            },
+            }),
             risk_level=random.choice(risk_levels),
             category=random.choice(["TECHNICAL", "FUNDAMENTAL", "HYBRID"]),
             subcategory=random.choice(["INTRADAY", "SWING", "POSITION", "ALGORITHMIC"]),
@@ -431,22 +431,22 @@ def create_strategies(db, num_strategies=NUM_RECORDS):
             type=random.choice(strategy_types),
             created_at=random_date(),
             is_active=random.random() > 0.2,
-            default_parameters={
+            default_parameters=decimal_to_json_serializable({
                 "rsi_period": random.randint(7, 21),
                 "ma_fast": random.randint(5, 20),
                 "ma_slow": random.randint(21, 50),
                 "stop_loss_pct": random_decimal(0.5, 5.0, 2),
                 "take_profit_pct": random_decimal(1.0, 10.0, 2),
                 "risk_per_trade_pct": random_decimal(0.5, 2.0, 2)
-            },
+            }),
             version=version,
             creator=fake.name(),
-            performance_summary={
+            performance_summary=decimal_to_json_serializable({
                 "win_rate": random_decimal(40.0, 70.0, 2),
                 "profit_factor": random_decimal(1.0, 3.0, 2),
                 "sharpe_ratio": random_decimal(0.5, 2.5, 2),
                 "max_drawdown": random_decimal(5.0, 30.0, 2)
-            },
+            }),
             risk_level=random.choice(risk_levels),
             parent_strategy_id=parent_id,
             category=random.choice(["TECHNICAL", "FUNDAMENTAL", "HYBRID"]),
@@ -504,18 +504,18 @@ def create_strategy_configs(db, users, strategies, num_configs=NUM_RECORDS*2):
             config_id=uuid.uuid4(),
             user_id=user.user_id,
             strategy_id=strategy.strategy_id,
-            parameters=params,
+            parameters=decimal_to_json_serializable(params),
             created_at=random_date(),
             updated_at=random_date(),
             is_active=random.random() > 0.2,
             name=f"{strategy.name} - {user.username} Config",
             description=fake.paragraph() if random.random() > 0.5 else None,
-            performance_summary={
+            performance_summary=decimal_to_json_serializable({
                 "win_rate": random_decimal(40.0, 70.0, 2),
                 "profit_factor": random_decimal(1.0, 3.0, 2),
                 "sharpe_ratio": random_decimal(0.5, 2.5, 2),
                 "max_drawdown": random_decimal(5.0, 30.0, 2)
-            } if random.random() > 0.5 else None,
+            }) if random.random() > 0.5 else None,
             is_favorite=random.choice([True, False]),
             risk_tolerance=random_decimal(1.0, 9.0, 2),
             max_position_size=random_decimal(0.01, 10.0, 8),
@@ -662,32 +662,56 @@ def create_trades(db, users, accounts, instruments, strategies, strategy_configs
         entry_price = base_price
         
         if direction == "BUY":
-            stop_loss = entry_price * (1 - random_decimal(0.01, 0.05, 8)) if random.random() > 0.2 else None
-            take_profit = entry_price * (1 + random_decimal(0.02, 0.1, 8)) if random.random() > 0.2 else None
+            # Convertir todos los valores a float para evitar problemas de tipos
+            if random.random() > 0.2:
+                sl_pct = float(random_decimal(0.01, 0.05, 8))
+                stop_loss = entry_price * (1 - sl_pct)
+            else:
+                stop_loss = None
+                
+            if random.random() > 0.2:
+                tp_pct = float(random_decimal(0.02, 0.1, 8))
+                take_profit = entry_price * (1 + tp_pct)
+            else:
+                take_profit = None
             
             if is_closed:
                 # Para operaciones cerradas, generar un precio de salida realista
                 if random.random() > 0.5:  # Ganadora
-                    exit_price = entry_price * (1 + random_decimal(0.005, 0.08, 8))
+                    win_pct = float(random_decimal(0.005, 0.08, 8))
+                    exit_price = entry_price * (1 + win_pct)
                 else:  # Perdedora
-                    exit_price = entry_price * (1 - random_decimal(0.005, 0.04, 8))
+                    loss_pct = float(random_decimal(0.005, 0.04, 8))
+                    exit_price = entry_price * (1 - loss_pct)
             else:
                 exit_price = None
         else:  # SELL
-            stop_loss = entry_price * (1 + random_decimal(0.01, 0.05, 8)) if random.random() > 0.2 else None
-            take_profit = entry_price * (1 - random_decimal(0.02, 0.1, 8)) if random.random() > 0.2 else None
+            if random.random() > 0.2:
+                sl_pct = float(random_decimal(0.01, 0.05, 8))
+                stop_loss = entry_price * (1 + sl_pct)
+            else:
+                stop_loss = None
+                
+            if random.random() > 0.2:
+                tp_pct = float(random_decimal(0.02, 0.1, 8))
+                take_profit = entry_price * (1 - tp_pct)
+            else:
+                take_profit = None
             
             if is_closed:
                 if random.random() > 0.5:  # Ganadora
-                    exit_price = entry_price * (1 - random_decimal(0.005, 0.08, 8))
+                    win_pct = float(random_decimal(0.005, 0.08, 8))
+                    exit_price = entry_price * (1 - win_pct)
                 else:  # Perdedora
-                    exit_price = entry_price * (1 + random_decimal(0.005, 0.04, 8))
+                    loss_pct = float(random_decimal(0.005, 0.04, 8))
+                    exit_price = entry_price * (1 + loss_pct)
             else:
                 exit_price = None
         
         # Calcular P&L si la operación está cerrada
-        volume = random_decimal(0.01, 10.0, 8)
-        commission = volume * entry_price * random_decimal(0.0001, 0.002, 8)
+        volume = float(random_decimal(0.01, 10.0, 8))
+        comm_rate = float(random_decimal(0.0001, 0.002, 8))
+        commission = volume * entry_price * comm_rate
         
         if is_closed and exit_price:
             if direction == "BUY":
@@ -726,14 +750,14 @@ def create_trades(db, users, accounts, instruments, strategies, strategy_configs
             order_type=random.choice(order_types),
             time_in_force=random.choice(time_in_force),
             leverage_used=random.choice([1, 2, 5, 10, 20, 50, 100]) if random.random() > 0.5 else None,
-            margin_used=volume * entry_price / (account.leverage_ratio if account.leverage_ratio else 1) if account.account_type == "MARGIN" else None,
-            risk_reward_ratio=random_decimal(0.5, 3.0, 2) if stop_loss and take_profit else None,
+            margin_used=volume * entry_price / float(account.leverage_ratio if account.leverage_ratio else 1) if account.account_type == "MARGIN" else None,
+            risk_reward_ratio=float(random_decimal(0.5, 3.0, 2)) if stop_loss and take_profit else None,
             max_risk_amount=volume * abs(entry_price - stop_loss) if stop_loss else None,
-            position_size_percentage=random_decimal(1.0, 10.0, 2),
+            position_size_percentage=float(random_decimal(1.0, 10.0, 2)),
             entry_reason=fake.paragraph() if random.random() > 0.5 else None,
             exit_reason=fake.paragraph() if is_closed and random.random() > 0.5 else None,
             market_condition_at_entry=random.choice(market_conditions),
-            volatility_at_entry=random_decimal(0.5, 5.0, 4),
+            volatility_at_entry=float(random_decimal(0.5, 5.0, 4)),
             created_at=entry_time,
             updated_at=exit_time if exit_time else entry_time
         )
@@ -895,7 +919,13 @@ def create_portfolio_allocations(db, portfolios, strategies, strategy_configs, n
     for _ in range(num_allocations):
         portfolio = random.choice(portfolios)
         strategy = random.choice(strategies) if random.random() > 0.2 else None
-        config = random.choice([c for c in strategy_configs if c.strategy_id == strategy.strategy_id]) if strategy and random.random() > 0.3 else None
+        
+        # Solo buscar configuración si hay una estrategia seleccionada
+        config = None
+        if strategy and random.random() > 0.3:
+            strategy_specific_configs = [c for c in strategy_configs if c.strategy_id == strategy.strategy_id]
+            if strategy_specific_configs:  # Solo elegir si hay configuraciones disponibles
+                config = random.choice(strategy_specific_configs)
         
         allocation_percentage = random_decimal(1, 100, 2)
         allocation_amount = portfolio.initial_capital * allocation_percentage / 100
@@ -1068,7 +1098,10 @@ def create_strategy_performance(db, strategies, strategy_configs, market_data, i
     
     for _ in range(num_performances):
         strategy = random.choice(strategies)
-        config = random.choice([c for c in strategy_configs if c.strategy_id == strategy.strategy_id]) if strategy_configs else None
+        # Buscar configuraciones para esta estrategia
+        strategy_specific_configs = [c for c in strategy_configs if c.strategy_id == strategy.strategy_id]
+        # Verificar si hay configuraciones disponibles para esta estrategia
+        config = random.choice(strategy_specific_configs) if strategy_specific_configs else None
         data = random.choice(market_data) if random.random() > 0.5 else None
         instrument = random.choice(instruments)
         timeframe = random.choice(timeframes)
@@ -1122,7 +1155,7 @@ def create_strategy_performance(db, strategies, strategy_configs, market_data, i
             maximum_favorable_excursion=random_decimal(100, 1000, 8) if random.random() > 0.5 else None,
             total_return=random_decimal(-20, 100, 4) if random.random() > 0.5 else None,
             annualized_return=random_decimal(-10, 50, 4) if random.random() > 0.5 else None,
-            monthly_returns={"1": 0.02, "2": -0.01, "3": 0.03} if random.random() > 0.5 else None,  # Valores float están bien para JSON
+            monthly_returns=decimal_to_json_serializable({"1": 0.02, "2": -0.01, "3": 0.03}) if random.random() > 0.5 else None,
             return_volatility=random_decimal(1, 30, 4) if random.random() > 0.5 else None,
             downside_deviation=random_decimal(1, 20, 4) if random.random() > 0.5 else None,
             avg_position_size=random_decimal(100, 10000, 8) if random.random() > 0.5 else None,
